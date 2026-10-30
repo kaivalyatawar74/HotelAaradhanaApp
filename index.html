@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hotel Aaradhana</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#faf5ee;--card:#fff;--text:#2a1f16;--muted:#7a6a5a;--line:#e6dccf;--accent:#b5541c;--at:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17120d;--card:#221b14;--text:#f2e9de;--muted:#a69583;--line:#3a2f24;--accent:#e8894a;--at:#1a0f06}}
+:root[data-theme="dark"]{--bg:#17120d;--card:#221b14;--text:#f2e9de;--muted:#a69583;--line:#3a2f24;--accent:#e8894a;--at:#1a0f06}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px}
+.wrap{max-width:560px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:4px 0 12px;color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:15px}
+label{font-size:12px;color:var(--muted);display:block;margin:6px 0 3px}
+.item{display:grid;grid-template-columns:1fr 62px 100px 36px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border:0}
+.item input.nm{text-align:left;font-weight:700;font-size:16px}.item .d{background:transparent;color:#c0392b;padding:0;font-size:24px;height:36px}
+.item input{padding:8px;text-align:right}
+.q{display:flex;align-items:center;justify-content:space-between}
+.q button{width:34px;height:34px;border-radius:50%;padding:0;font-size:20px}
+.q span{min-width:24px;text-align:center;font-weight:700;font-size:17px}
+button{border:0;border-radius:10px;padding:12px 14px;font-size:16px;cursor:pointer;background:var(--accent);color:var(--at);font-weight:700}
+button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px}.tb{flex:0 0 auto;background:var(--card);color:var(--text);border:1px solid var(--line);font-size:14px;padding:8px 12px;line-height:1.3}.tb.on{background:var(--accent);color:var(--at);border-color:var(--accent)}.tb.add{background:transparent;color:var(--accent);border:1px dashed var(--accent)}
+.bar{position:sticky;bottom:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:700;margin-bottom:12px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+#bill{background:#fff;color:#111;border:1px solid var(--line);border-radius:12px;padding:16px;font-size:14px}
+#bill h3{margin:0;text-align:center;font-size:19px;color:#b5541c}
+#bill .c{text-align:center;font-size:12px;color:#666}
+#bill table{width:100%;border-collapse:collapse;margin-top:10px}
+#bill td,#bill th{padding:5px 2px;text-align:right;border-bottom:1px dashed #ccc}
+#bill td:first-child,#bill th:first-child{text-align:left}
+#bill .g td{font-weight:700;font-size:16px;border-top:2px solid #111;border-bottom:0}
+select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:15px}
+#hv .row button{padding:10px 3px;font-size:13px}
+@media print{body{background:#fff}.np{display:none!important}#bill{border:0}.wrap{padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="np" style="display:flex;justify-content:space-between;align-items:center"><h1 style="margin:4px 0 12px">☕ Hotel Aaradhana</h1><button class="sec" style="padding:8px 12px;font-size:14px" onclick="toggleH()">📊 History</button></div>
+<div class="card np" id="hv" style="display:none"></div>
+
+<div class="np">
+<div class="card">
+<label>Dukaan / Hotel ka naam</label><input id="sn" value="Hotel Aaradhana" oninput="save()">
+<input id="pro" type="hidden" value="Mr. GIRASE BANDHU">
+<div class="row"><div><label>Phone</label><input id="sp" value="" placeholder="Phone number" oninput="save()"></div>
+<div><label>GST % (nahi to 0)</label><input id="gp" type="number" value="0" oninput="calc()"></div></div>
+<label>UPI ID (bill par QR ke liye)</label><input id="up" placeholder="naam@upi" oninput="save()">
+<input id="dc" type="hidden" value="0"><input id="dt" type="hidden" value="Rs">
+<div class="row"><div><label>Payment</label><select id="pm"><option>Cash</option><option>UPI</option><option>Udhaar</option></select></div></div>
+<label>Customer / Table (optional)</label><input id="cu" placeholder="Table 3" oninput="calc()">
+</div>
+
+<div id="tabs" class="tabs"></div>
+<div class="card" id="items"></div>
+<button class="sec" style="width:100%;margin-bottom:12px" onclick="addItem()">+ Naya item jodo</button>
+
+<div class="bar"><span>Total</span><span id="tot">Rs. 0.00</span></div>
+<div class="row" style="margin-bottom:12px"><button class="sec" onclick="clr()">Done / Clear</button><button onclick="show()">Bill banao</button></div>
+</div>
+
+<div id="bill" style="display:none"></div>
+<div class="row np" id="pr" style="display:none;margin-top:12px;flex-wrap:wrap"><button onclick="savePdf()">PDF save</button><button style="flex:1 1 100%" onclick="btPrint()">🖨️ Bluetooth Print</button></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let items=[{n:'Chai',p:10,q:0},{n:'Nasta',p:20,q:0},{n:'Cold Drink',p:20,q:0}];
+let billNo=1;
+try{const d=JSON.parse(localStorage.getItem('chai')||'null');if(d){items=d.items.map(i=>({...i,q:0}));$('sn').value=(d.sn&&d.sn!=='Hotel Sharma Chai Nasta')?d.sn:'Hotel Aaradhana';$('sp').value=d.sp||'';$('gp').value=d.gp||0;$('up').value=d.up||'';billNo=d.bn||1}}catch(e){}
+function save(){try{localStorage.setItem('chai',JSON.stringify({items,sn:$('sn').value,sp:$('sp').value,pro:$('pro').value,gp:$('gp').value,up:$('up').value,bn:billNo}))}catch(e){}}
+function draw(){
+  $('items').innerHTML=items.map((it,i)=>'<div class="item"><div><input class="nm" placeholder="Item ka naam" value="'+esc(it.n)+'" onchange="items['+i+'].n=this.value;save()"></div><input type="number" value="'+it.p+'" onchange="items['+i+'].p=+this.value||0;save();calc()"><div class="q"><button onclick="chg('+i+',-1)">−</button><span>'+it.q+'</span><button onclick="chg('+i+',1)">+</button></div><button class="d" onclick="del('+i+')">×</button></div>').join('');
+  calc();
+}
+function chg(i,d){items[i].q=Math.max(0,items[i].q+d);draw()}
+let orders=[{q:[],cu:''}],cur=0;
+function addItem(){stash();items.push({n:'',p:0,q:0});orders.forEach(o=>o.q.push(0));save();draw();const a=document.querySelectorAll('.item input.nm');a[a.length-1].focus()}
+function del(i){
+  stash();const it=items[i],qs=orders.map(o=>o.q[i]||0);
+  items.splice(i,1);orders.forEach(o=>o.q.splice(i,1));save();draw();
+  toast('"'+(it.n||'Item')+'" hata diya',()=>{items.splice(i,0,it);orders.forEach((o,k)=>o.q.splice(i,0,qs[k]));load();save();draw()});
+}
+function stash(){orders[cur].q=items.map(i=>i.q);orders[cur].cu=$('cu').value}
+function load(){items.forEach((it,i)=>it.q=orders[cur].q[i]||0);$('cu').value=orders[cur].cu}
+function hideBill(){$('bill').style.display='none';$('pr').style.display='none'}
+function sw(k){stash();cur=k;load();hideBill();draw()}
+function newOrder(){stash();orders.push({q:items.map(()=>0),cu:''});cur=orders.length-1;load();hideBill();draw()}
+function tt(qs){const sub=items.reduce((s,it,i)=>s+it.p*(qs[i]||0),0);return sub+Math.round(sub*(+$('gp').value||0))/100}
+function tabs(){$('tabs').innerHTML=orders.map((o,k)=>{const c=k==cur;const qs=c?items.map(i=>i.q):o.q;const nm=(c?$('cu').value:o.cu)||('Customer '+(k+1));return '<button class="tb'+(c?' on':'')+'" onclick="sw('+k+')">'+esc(nm)+'<br><small>Rs. '+fmt(tt(qs))+'</small></button>'}).join('')+'<button class="tb add" onclick="newOrder()">+ Naya customer</button>'}
+function sums(){const sub=items.reduce((s,i)=>s+i.p*i.q,0);let d=+$('dc').value||0;if($('dt').value==='%')d=Math.round(sub*d)/100;d=Math.min(d,sub);const g=Math.round((sub-d)*(+$('gp').value||0))/100;return{sub,d,g,t:sub-d+g}}
+function calc(){$('tot').textContent='Rs. '+fmt(sums().t);tabs()}
+function clr(){if(orders.length>1){orders.splice(cur,1);cur=Math.max(0,cur-1);load()}else{items.forEach(i=>i.q=0);orders[0].cu='';orders[0].bn=0;$('cu').value=''}$('dc').value=0;hideBill();draw()}
+function show(){
+  const s=sums(),sel=items.filter(i=>i.q>0);
+  if(!sel.length){toast('Pehle item chuno');return}if($('pm').value==='Udhaar'&&!$('cu').value.trim()){toast('Udhaar ke liye Customer naam likho');return}
+  const now=new Date(),o=orders[cur],pay=$('pm').value;if(!o.bn){o.bn=billNo++}const bn=String(o.bn).padStart(4,'0');
+  let h='<h3>'+esc($('sn').value)+'</h3>'+($('pro').value?'<div class="c">Proprietor: '+esc($('pro').value)+'</div>':'')+($('sp').value?'<div class="c">Ph: '+esc($('sp').value)+'</div>':'')
+   +'<div class="c">Bill No: '+bn+' | '+now.toLocaleDateString('en-IN')+' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+'</div>'
+   +($('cu').value?'<div class="c">'+esc($('cu').value)+'</div>':'')
+   +'<table><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>'
+   +sel.map(i=>'<tr><td>'+esc(i.n||'Item')+'</td><td>'+i.q+'</td><td>'+fmt(i.p)+'</td><td>'+fmt(i.p*i.q)+'</td></tr>').join('');
+  if(s.g||s.d)h+='<tr><td colspan="3">Subtotal</td><td>'+fmt(s.sub)+'</td></tr>'+(s.d?'<tr><td colspan="3">Discount</td><td>-'+fmt(s.d)+'</td></tr>':'')+(s.g?'<tr><td colspan="3">GST '+$('gp').value+'%</td><td>'+fmt(s.g)+'</td></tr>':'');
+  h+='<tr class="g"><td colspan="3">TOTAL</td><td>Rs. '+fmt(s.t)+'</td></tr></table><div class="c" style="margin-top:6px">Payment: '+pay+'</div><div class="c" style="margin-top:12px">Dhanyawad...🙏🏻<br><small>Developed by Kaivalya Tawar</small></div>'+qrHtml(s.t);
+  $('bill').innerHTML=h;try{if($('qr'))new QRCode($('qr'),{text:'upi://pay?pa='+encodeURIComponent($('up').value.trim())+'&pn='+encodeURIComponent($('sn').value)+'&am='+s.t.toFixed(2)+'&cu=INR',width:150,height:150})}catch(e){}$('bill').style.display='block';$('pr').style.display='flex';
+  rec(sel,s,now,o.bn,pay);lastBill={sel:sel,s:s,now:now,bn:o.bn,pay:pay};save();$('bill').scrollIntoView({behavior:'smooth'});
+}
+async function savePdf(){
+  try{
+    const dl=window.claude?await claude.use('downloads'):null;
+    if(!dl){doPrint();return}
+    const cv=await html2canvas($('bill'),{scale:2,backgroundColor:'#ffffff'});
+    const w=80,h=w*cv.height/cv.width;
+    const pdf=new window.jspdf.jsPDF({unit:'mm',format:[w,h],orientation:h>w?'portrait':'landscape'});
+    pdf.addImage(cv.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
+    await dl.save({filename:'Bill_'+Date.now()+'.pdf',data:pdf.output('blob')});
+  }catch(e){if(!e||e.code!=='declined')toast('PDF nahi ban paya. Print dabake Save as PDF chuno.')}
+}
+let hist=[];try{hist=JSON.parse(localStorage.getItem('chai_hist')||'[]')}catch(e){}
+let hm=0;
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function saveH(){try{localStorage.setItem('chai_hist',JSON.stringify(hist))}catch(e){}}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function rec(sel,s,now,id,pay){
+  const r={id:id,pay:pay,cu:$('cu').value.trim(),ts:now.getTime(),sub:s.sub,dis:s.d,g:s.g,d:ymd(now),t:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),tot:s.t,it:sel.map(i=>({n:i.n||'Item',e:i.e||'',q:i.q,p:i.p}))};
+  const k=hist.findIndex(x=>x.id===id&&x.d===r.d);
+  if(k>=0)hist[k]=r;else hist.push(r);
+  saveH();
+  if($('hv').style.display!=='none')drawH();
+}
+function toggleH(){const v=$('hv');if(v.style.display==='none'){v.style.display='block';drawH()}else v.style.display='none'}
+function setHm(m){hm=m;drawH()}
+let clrArm=0;
+function clrH(){
+  const now=Date.now();
+  if(now-clrArm<4000){hist=[];saveH();clrArm=0;drawH();toast('History saaf ho gayi');return}
+  clrArm=now;const b=$('clrb');
+  if(b){b.textContent='Pakka? Dobara dabao';b.style.background='#c0392b';b.style.color='#fff'}
+  setTimeout(()=>{const b=$('clrb');if(b&&Date.now()-clrArm>=3900){clrArm=0;b.textContent='History saaf karo';b.style.background='';b.style.color='#c0392b'}},4000);
+}
+function toast(m,fn){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;max-width:90%;text-align:center';document.body.appendChild(t)}t.textContent=m;if(fn){const b=document.createElement('button');b.textContent='Undo';b.style.cssText='margin-left:10px;padding:4px 10px;font-size:13px';b.onclick=()=>{fn();t.style.display='none'};t.appendChild(b)}t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},fn?5000:2500)}
+let exp=[];try{exp=JSON.parse(localStorage.getItem('chai_exp')||'[]')}catch(e){}
+function saveE(){try{localStorage.setItem('chai_exp',JSON.stringify(exp))}catch(e){}}
+function ES(f){return exp.filter(f).reduce((s,x)=>s+x.a,0)}
+function sline(t,a,e){const by=m=>a.filter(x=>(x.pay||'Cash')===m).reduce((s,x)=>s+x.tot,0),tot=a.reduce((s,x)=>s+x.tot,0);return '<div style="margin:6px 0"><b>'+t+': Rs. '+fmt(tot)+'</b> ('+a.length+' bill)<div style="font-size:12px;color:var(--muted)">Cash '+fmt(by('Cash'))+' · UPI '+fmt(by('UPI'))+' · Udhaar '+fmt(by('Udhaar'))+'</div></div>'}
+function expUI(today){return '<div class="row" style="margin:8px 0"><input id="en" placeholder="Kharcha (doodh, gas)" style="flex:2"><input id="ea" type="number" placeholder="Rs."><button style="flex:0 0 44px;padding:8px" onclick="addE()">+</button></div>'+exp.map((x,k)=>x.d===today?'<span style="font-size:12px;margin-right:10px;color:var(--muted)">'+esc(x.n)+' '+x.a+' <a onclick="de('+k+')" style="color:#c0392b">✕</a></span>':'').join('')}
+function addE(){const a=+$('ea').value;if(!a){toast('Kharcha ki amount likho');return}exp.push({d:ymd(new Date()),n:$('en').value.trim()||'Kharcha',a:a});saveE();drawH()}
+function de(k){exp.splice(k,1);saveE();drawH()}
+let dhArm=-1;
+function dh(k){if(dhArm===k){hist.splice(k,1);dhArm=-1;saveH();drawH();toast('Bill hata diya');return}dhArm=k;drawH();setTimeout(()=>{if(dhArm===k){dhArm=-1;drawH()}},3000)}
+function rp(k){const r=hist[k];if(!r)return;lastBill={sel:r.it.map(i=>({n:i.n,e:i.e,q:i.q,p:i.p})),s:{sub:r.sub==null?r.tot:r.sub,d:r.dis||0,g:r.g||0,t:r.tot},now:new Date(r.ts||(r.d+'T12:00:00')),bn:r.id,pay:r.pay};btPrint()}
+let sett=[];try{sett=JSON.parse(localStorage.getItem('chai_sett')||'[]')}catch(e){}
+function saveS(){try{localStorage.setItem('chai_sett',JSON.stringify(sett))}catch(e){}}
+let crN=[];
+function udhaarUI(){
+  const m={};hist.forEach(x=>{if(x.pay==='Udhaar'){const n=x.cu||'?';m[n]=(m[n]||0)+x.tot}});
+  sett.forEach(x=>{m[x.n]=(m[x.n]||0)-x.a});
+  crN=Object.keys(m).filter(n=>m[n]>0.005);
+  if(!crN.length)return '<p style="color:var(--muted)">Koi udhaar baaki nahi. Bill banate samay Payment mein Udhaar chuno aur Customer naam likho.</p>';
+  return '<p style="font-size:13px;color:var(--muted);margin:4px 0">Kul baaki: Rs. '+fmt(crN.reduce((s,n)=>s+m[n],0))+'</p>'+crN.map((n,k)=>'<div style="border-top:1px solid var(--line);padding:8px 0"><div style="display:flex;justify-content:space-between"><b>'+esc(n)+'</b><b>Rs. '+fmt(m[n])+'</b></div><div class="row" style="margin-top:6px"><input id="sa'+k+'" type="number" placeholder="Mile paise Rs."><button style="flex:0 0 70px;padding:8px" onclick="addS('+k+')">Mila</button></div></div>').join('');
+}
+function addS(k){const a=+$('sa'+k).value;if(!a){toast('Amount likho');return}sett.push({n:crN[k],a:a,d:ymd(new Date())});saveS();drawH();toast('Hisaab update ho gaya')}
+function pick(){$('rf').click()}
+async function bkp(){
+  try{
+    const dl=window.claude?await claude.use('downloads'):null;
+    if(!dl){toast('Backup sirf Chrome wale link mein chalta hai');return}
+    const o={v:1,hist:hist,exp:exp,sett:sett,items:items.map(i=>({n:i.n,e:i.e||'',p:i.p})),sn:$('sn').value,pro:$('pro').value,sp:$('sp').value,gp:$('gp').value,up:$('up').value,bn:billNo};
+    await dl.save({filename:'HotelAaradhana_backup.json',data:new Blob([JSON.stringify(o)],{type:'application/json'})});
+  }catch(e){if(!e||e.code!=='declined')toast('Backup nahi ban paya')}
+}
+function rst(inp){
+  const f=inp.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{
+    const o=JSON.parse(r.result);if(!Array.isArray(o.hist))throw 0;
+    hist=o.hist;exp=o.exp||[];sett=o.sett||[];
+    items=(o.items||[]).map(i=>({n:i.n,e:i.e||'',p:+i.p||0,q:0}));orders=[{q:items.map(()=>0),cu:''}];cur=0;
+    $('sn').value=o.sn||$('sn').value;$('sp').value=o.sp||'';$('gp').value=o.gp||0;$('up').value=o.up||'';billNo=o.bn||billNo;
+    saveH();saveE();saveS();save();hideBill();draw();drawH();toast('Restore ho gaya ✅');
+  }catch(e){toast('File sahi nahi hai')}};
+  r.readAsText(f);inp.value='';
+}
+async function repPdf(){
+  try{
+    const dl=window.claude?await claude.use('downloads'):null;
+    if(!dl){toast('PDF sirf Chrome wale link mein chalta hai');return}
+    const today=ymd(new Date()),a=hist.filter(x=>x.d===today),t={};
+    a.forEach(x=>x.it.forEach(i=>{const e=t[i.n]=t[i.n]||{q:0,m:0};e.q+=i.q;e.m+=i.q*i.p}));
+    const d=document.createElement('div');
+    d.style.cssText='position:fixed;left:-9999px;top:0;width:560px;background:#fff;color:#111;padding:20px;font-family:sans-serif;font-size:14px';
+    d.innerHTML='<h2 style="margin:0;color:#b5541c">'+esc($('sn').value)+'</h2><div>Daily Report: '+today.split('-').reverse().join('-')+'</div><hr>'+sline('Aaj',a,ES(x=>x.d===today))+'<hr><b>Item-wise</b><table style="width:100%;border-collapse:collapse">'+Object.keys(t).map(n=>'<tr><td>'+esc(n)+'</td><td align="right">'+t[n].q+' pcs</td><td align="right">Rs. '+fmt(t[n].m)+'</td></tr>').join('')+'</table><hr><div style="font-size:12px;color:#777">Developed by Kaivalya Tawar</div>';
+    document.body.appendChild(d);
+    const cv=await html2canvas(d,{scale:2,backgroundColor:'#ffffff'});d.remove();
+    const w=190,h=w*cv.height/cv.width,pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+    pdf.addImage(cv.toDataURL('image/jpeg',0.92),'JPEG',10,10,w,h);
+    await dl.save({filename:'Report_'+today+'.pdf',data:pdf.output('blob')});
+  }catch(e){if(!e||e.code!=='declined')toast('Report PDF nahi ban payi')}
+}
+function topList(a,title){
+  const t={};a.forEach(x=>x.it.forEach(i=>{const e=t[i.n]=t[i.n]||{q:0,amt:0};e.q+=i.q;e.amt+=i.q*i.p}));
+  const k=Object.keys(t).sort((x,y)=>t[y].q-t[x].q);
+  let h='<div style="border-top:1px solid var(--line);padding:10px 0 4px"><b>'+title+'</b>';
+  if(!k.length)return h+'<div style="font-size:13px;color:var(--muted);margin-top:4px">Koi bill nahi</div></div>';
+  const mx=t[k[0]].q,medal=['🥇 ','🥈 ','🥉 '];
+  k.forEach((n,r)=>{const e=t[n];
+    h+='<div style="margin:8px 0 4px"><div style="display:flex;justify-content:space-between;font-size:14px;gap:8px"><span>'+(medal[r]||'')+esc(n)+'</span><span><b>'+e.q+'</b> pcs · Rs. '+fmt(e.amt)+'</span></div><div style="height:6px;border-radius:3px;background:var(--line);margin-top:3px"><div style="height:6px;border-radius:3px;background:var(--accent);width:'+Math.max(4,Math.round(e.q/mx*100))+'%"></div></div></div>'});
+  return h+'</div>';
+}
+function drawH(){
+  const today=ymd(new Date()),mon=today.slice(0,7);
+  const sum=a=>a.reduce((s,x)=>s+x.tot,0);
+  const tt=hist.filter(x=>x.d===today),tm=hist.filter(x=>x.d.slice(0,7)===mon);
+  let h='<div style="display:flex;justify-content:space-between;align-items:center"><b>📊 History</b><button class="sec" style="padding:4px 10px;font-size:13px" onclick="toggleH()">Band</button></div>'
+   +sline('Aaj',tt,ES(x=>x.d===today))+sline('Is mahine',tm,ES(x=>x.d.slice(0,7)===mon))
+   +'<div class="row" style="margin:8px 0"><button class="'+(hm===0?'':'sec')+'" onclick="setHm(0)">Din-wise</button><button class="'+(hm===1?'':'sec')+'" onclick="setHm(1)">Mahina-wise</button><button class="'+(hm===2?'':'sec')+'" onclick="setHm(2)">Top items</button><button class="'+(hm===3?'':'sec')+'" onclick="setHm(3)">Udhaar</button></div>';
+  if(!hist.length){h+='<p style="color:var(--muted)">Abhi koi bill nahi. Bill banate hi yahan dikhega.</p>'}
+  else if(hm===0){
+    const days={};hist.forEach(x=>{(days[x.d]=days[x.d]||[]).push(x)});
+    Object.keys(days).sort().reverse().slice(0,31).forEach(d=>{
+      const a=days[d];
+      h+='<div style="border-top:1px solid var(--line);padding:8px 0"><div style="display:flex;justify-content:space-between"><b>'+d.split('-').reverse().join('-')+'</b><b>Rs. '+fmt(sum(a))+'</b></div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">'+a.length+' bill</div>'
+       +a.slice().reverse().map(x=>'<div style="font-size:13px;display:flex;justify-content:space-between;gap:8px;padding:2px 0"><span>#'+String(x.id).padStart(4,'0')+' '+x.t+' · '+esc(x.it.map(i=>i.n+' x'+i.q).join(', '))+'</span><span style="white-space:nowrap">'+fmt(x.tot)+' <button class="sec" style="padding:1px 6px;font-size:12px" onclick="rp('+hist.indexOf(x)+')">🖨️</button> <button class="sec" style="padding:1px 6px;font-size:12px" onclick="dh('+hist.indexOf(x)+')">'+(dhArm===hist.indexOf(x)?'✓':'🗑')+'</button></span></div>').join('')+'</div>';
+    });
+  } else if(hm===1){
+    const ms={};
+    hist.forEach(x=>{const k=x.d.slice(0,7);const m=ms[k]=ms[k]||{n:0,t:0,it:{}};m.n++;m.t+=x.tot;x.it.forEach(i=>{m.it[i.n]=(m.it[i.n]||0)+i.q})});
+    Object.keys(ms).sort().reverse().forEach(k=>{
+      const m=ms[k],[y,mo]=k.split('-');
+      h+='<div style="border-top:1px solid var(--line);padding:8px 0"><div style="display:flex;justify-content:space-between"><b>'+MN[+mo-1]+' '+y+'</b><b>Rs. '+fmt(m.t)+'</b></div><div style="font-size:12px;color:var(--muted)">'+m.n+' bill</div><div style="font-size:13px;margin-top:3px">'+Object.keys(m.it).map(n=>esc(n)+' x'+m.it[n]).join(', ')+'</div></div>';
+    });
+  } else if(hm===3){
+    h+=udhaarUI();
+  } else {
+    h+=topList(tt,'Aaj')+topList(tm,'Is mahine')+topList(hist,'Ab tak (total)');
+  }
+  h+='<div class="row" style="margin-top:10px"><button class="sec" onclick="repPdf()">📄 Aaj ki report PDF</button></div><div class="row" style="margin-top:8px"><button class="sec" onclick="bkp()">💾 Backup</button><button class="sec" onclick="pick()">📥 Restore</button></div><input type="file" id="rf" accept=".json" style="display:none" onchange="rst(this)">';
+  h+='<button class="sec" style="width:100%;margin-top:10px;color:#c0392b;border-color:#c0392b" id="clrb" onclick="clrH()">History saaf karo</button>';
+  $('hv').innerHTML=h;
+}
+let lastBill=null;
+function escpos(L){
+  const W=32,e=[];
+  const push=(...a)=>a.forEach(x=>e.push(x&255));
+  const txt=t=>{t=String(t).replace(/[^\x20-\x7e]/g,'?');for(const c of t)e.push(c.charCodeAt(0))};
+  const ln=t=>{txt(t);e.push(10)};
+  const pad=(l,r)=>l+' '.repeat(Math.max(1,W-l.length-r.length))+r;
+  const s=L.s,dash='-'.repeat(W);
+  push(0x1b,0x40,0x1b,0x61,1,0x1b,0x45,1,0x1d,0x21,0x11);ln($('sn').value);push(0x1d,0x21,0,0x1b,0x45,0);
+  if($('pro').value)ln('Prop: '+$('pro').value);if($('sp').value)ln('Ph: '+$('sp').value);
+  ln('Bill #'+String(L.bn).padStart(4,'0')+'  '+L.now.toLocaleDateString('en-IN')+' '+L.now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+  if($('cu').value)ln($('cu').value);
+  push(0x1b,0x61,0);ln(dash);
+  L.sel.forEach(i=>{ln((i.e||i.n||'Item').slice(0,W));ln(pad('  '+i.q+' x '+fmt(i.p),fmt(i.q*i.p)))});
+  ln(dash);
+  if(s.g||s.d){ln(pad('Subtotal',fmt(s.sub)));if(s.d)ln(pad('Discount','-'+fmt(s.d)));if(s.g)ln(pad('GST '+$('gp').value+'%',fmt(s.g)))}
+  push(0x1b,0x45,1);ln(pad('TOTAL','Rs.'+fmt(s.t)));push(0x1b,0x45,0);if(L.pay)ln('Payment: '+L.pay);
+  const u=$('up').value.trim();
+  if(u){
+    const d='upi://pay?pa='+encodeURIComponent(u)+'&pn='+encodeURIComponent($('sn').value)+'&am='+s.t.toFixed(2)+'&cu=INR';
+    push(0x1b,0x61,1);e.push(10);ln('Scan karke pay karo');
+    push(0x1d,0x28,0x6b,4,0,0x31,0x41,0x32,0,0x1d,0x28,0x6b,3,0,0x31,0x43,6,0x1d,0x28,0x6b,3,0,0x31,0x45,0x31);
+    const n=d.length+3;push(0x1d,0x28,0x6b,n&255,n>>8,0x31,0x50,0x30);txt(d);push(0x1d,0x28,0x6b,3,0,0x31,0x51,0x30);e.push(10);
+  }
+  push(0x1b,0x61,1);ln('Dhanyawad...');ln('Developed by Kaivalya Tawar');push(10,10,10);
+  return e;
+}
+function btPrint(){
+  if(!lastBill){toast('Pehle Bill banao');return}
+  let bin='';escpos(lastBill).forEach(b=>{bin+=String.fromCharCode(b)});
+  toast('RawBT app khul raha hai...');
+  try{window.location.href='rawbt:base64,'+btoa(bin)}catch(e){toast('RawBT app nahi mila. Pehle use install karo.')}
+}
+function qrHtml(t){const u=$('up').value.trim();return u?'<div class="c" style="margin-top:12px">Scan karke pay karo: Rs. '+fmt(t)+'</div><div id="qr" style="display:flex;justify-content:center;margin-top:6px"></div>':''}
+function doPrint(){if(window.AndroidPrint){AndroidPrint.print()}else{window.print()}}
+orders[0].q=items.map(()=>0);draw();
+</script>
+</body>
+</html>
