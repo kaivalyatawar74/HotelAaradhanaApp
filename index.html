@@ -75,7 +75,7 @@ select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;ba
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-const UK=(()=>{try{return sessionStorage.getItem('chai_user')||''}catch(e){return''}})();
+const UK=(()=>{try{return localStorage.getItem('chai_user')||''}catch(e){return''}})();
 const K=k=>(UK?'u_'+UK+'_':'')+k;
 const fmt=n=>n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -225,18 +225,25 @@ async function lgGo(){
     us[n]={s:salt,h:await hp(p,salt)};
     try{localStorage.setItem('chai_users',JSON.stringify(us));
       if(first)['chai','chai_hist','chai_exp','chai_sett'].forEach(k=>{const v=localStorage.getItem(k);if(v!=null)localStorage.setItem('u_'+n+'_'+k,v)})}catch(e){}
-  }else if(!us[n]||us[n].h!==await hp(p,us[n].s)){$('lgm').textContent='Naam ya password galat hai';return}
-  try{sessionStorage.setItem('chai_user',n)}catch(e){$('lgm').textContent='Phone ne login yaad nahi rakha';return}
-  try{sessionStorage.setItem('chai_sid',await hp(n+':'+p,'shop'))}catch(e){}
+  }else if(!us[n]){
+    let ok=false;
+    try{if(CLOUD){const sid=await hp(n+':'+p,'shop');const c=await(await fetch(CLOUD.replace(/\/$/,'')+'/shops/'+sid+'.json')).json();ok=!!c}}catch(e){}
+    if(!ok){$('lgm').textContent='Ye user is phone par nahi mila. Internet chalu karke sahi naam aur password likho.';return}
+    const salt=Math.random().toString(36).slice(2);us[n]={s:salt,h:await hp(p,salt)};
+    try{localStorage.setItem('chai_users',JSON.stringify(us))}catch(e){}
+  }else if(us[n].h!==await hp(p,us[n].s)){$('lgm').textContent='Naam ya password galat hai';return}
+  try{localStorage.setItem('chai_user',n)}catch(e){$('lgm').textContent='Phone ne login yaad nahi rakha';return}
+  try{localStorage.setItem('chai_sid',await hp(n+':'+p,'shop'))}catch(e){}
   location.reload();
 }
-function logout(){try{sessionStorage.removeItem('chai_user')}catch(e){}location.reload()}
+let lo=0;
+function logout(){if(Date.now()-lo>3000){lo=Date.now();toast('Logout karna hai to 🔒 dobara dabao');return}try{localStorage.removeItem('chai_user');localStorage.removeItem('chai_sid')}catch(e){}location.reload()}
 const CLOUD='https://hotelaaradhanaapp-default-rtdb.asia-southeast1.firebasedatabase.app';
 let gone=[];try{gone=JSON.parse(localStorage.getItem(K('chai_gone'))||'[]')}catch(e){}
 let syncing=false,pt=null;
 const bk=x=>x.id+'_'+(x.ts||x.d)+'_'+x.d;
 function saveG(){try{localStorage.setItem(K('chai_gone'),JSON.stringify(gone))}catch(e){}}
-function cloudUrl(){let sid='';try{sid=sessionStorage.getItem('chai_sid')||''}catch(e){}return CLOUD&&sid?CLOUD.replace(/\/$/,'')+'/shops/'+sid+'.json':''}
+function cloudUrl(){let sid='';try{sid=localStorage.getItem('chai_sid')||''}catch(e){}return CLOUD&&sid?CLOUD.replace(/\/$/,'')+'/shops/'+sid+'.json':''}
 function snap(){return{hist:hist,sett:sett,gone:gone,items:items.map(i=>({n:i.n,p:i.p})),sn:$('sn').value,sp:$('sp').value,gp:$('gp').value,up:$('up').value,bn:billNo}}
 function push(){if(syncing||!cloudUrl())return;clearTimeout(pt);pt=setTimeout(doPush,1500)}
 async function doPush(){try{await pull();await fetch(cloudUrl(),{method:'PUT',body:JSON.stringify(snap())})}catch(e){}}
