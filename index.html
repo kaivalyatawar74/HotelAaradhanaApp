@@ -42,28 +42,30 @@ select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;ba
 </head>
 <body>
 <div id="lg" style="display:none;position:fixed;inset:0;z-index:50;background:var(--bg);padding:24px;padding-top:calc(40px + env(safe-area-inset-top,0px))"><div style="max-width:380px;margin:0 auto"><h1 style="text-align:center">☕ Hotel Aaradhana</h1><div class="card"><h2 id="lgt" style="font-size:15px;margin:0 0 10px;color:var(--text)"></h2><label>User naam</label><input id="lgn" autocapitalize="none" autocomplete="off"><label>Password (kam se kam 4 akshar)</label><input id="lgp" type="password"><p id="lgm" style="color:#c0392b;font-size:13px;min-height:18px;margin:8px 0"></p><button style="width:100%" id="lgb" onclick="lgGo()">Login</button><p style="text-align:center;margin:12px 0 0"><a id="lgs" onclick="lgSw()" style="color:var(--accent);font-size:14px">Naya user banao</a></p></div><p style="text-align:center;color:var(--muted);font-size:13px;margin:18px 0 0">Developed by Kaivalya Tawar</p></div></div>
+<div id="mn" style="display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);padding:20px"><div class="card" style="max-width:380px;margin:50px auto 0;max-height:calc(100% - 90px);overflow:auto" id="mnb"></div></div>
 <div class="wrap">
-<div class="np" style="display:flex;justify-content:space-between;align-items:center"><h1 style="margin:4px 0 12px">☕ Hotel Aaradhana</h1><button class="sec" style="padding:8px 12px;font-size:14px" onclick="toggleH()">📊 History</button> <button class="sec" style="padding:8px 10px;font-size:14px" onclick="logout()">🔒</button></div>
+<div class="np" style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><h1 style="margin:0;flex:1;min-width:0;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">☕ <span id="hn">Hotel Aaradhana</span></h1><button class="sec" style="flex:0 0 auto;padding:7px 10px;font-size:14px" onclick="toggleH()">📊 History</button><button class="sec" style="flex:0 0 auto;padding:7px 12px;font-size:16px" onclick="menu()">⋮</button><button class="sec" style="flex:0 0 auto;padding:7px 10px;font-size:14px" onclick="logout()">🔒</button></div>
 <div class="card np" id="hv" style="display:none"></div>
 
 <div class="np">
 <div class="card">
-<label>Dukaan / Hotel ka naam</label><input id="sn" value="Hotel Aaradhana" oninput="save()">
+<input id="sn" type="hidden" value="Hotel Aaradhana">
 <input id="pro" type="hidden" value="Mr. GIRASE BANDHU">
-<div class="row"><div><label>Phone</label><input id="sp" value="" placeholder="Phone number" oninput="save()"></div>
-<div><label>GST % (nahi to 0)</label><input id="gp" type="number" value="0" oninput="calc()"></div></div>
-<label>UPI ID (bill par QR ke liye)</label><input id="up" placeholder="naam@upi" oninput="save()">
+<input id="sp" type="hidden" value="">
+<input id="gp" type="hidden" value="0">
+<input id="up" type="hidden">
 <input id="dc" type="hidden" value="0"><input id="dt" type="hidden" value="Rs">
-<div class="row"><div><label>Payment</label><select id="pm"><option>Cash</option><option>UPI</option><option>Udhaar</option></select></div></div>
+<input id="pm" type="hidden" value="Cash">
 <label>Customer / Table (optional)</label><input id="cu" placeholder="Table 3" oninput="calc()">
 </div>
 
 <div id="tabs" class="tabs"></div>
+<div id="ctabs" class="tabs"></div>
 <div class="card" id="items"></div>
 <button class="sec" style="width:100%;margin-bottom:12px" onclick="addItem()">+ Naya item jodo</button>
 
 <div class="bar"><span>Total</span><span id="tot">Rs. 0.00</span></div>
-<div class="row" style="margin-bottom:12px"><button class="sec" onclick="clr()">Done / Clear</button><button onclick="show()">Bill banao</button></div>
+<div class="row" style="margin-bottom:12px"><button class="sec" onclick="clr()">Done / Clear</button><button onclick="payAsk()">Bill banao</button></div>
 </div>
 
 <div id="bill" style="display:none"></div>
@@ -79,17 +81,23 @@ const UK=(()=>{try{return localStorage.getItem('chai_user')||''}catch(e){return'
 const K=k=>(UK?'u_'+UK+'_':'')+k;
 const fmt=n=>n.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let items=[{n:'Chai',p:10,q:0},{n:'Nasta',p:20,q:0},{n:'Cold Drink',p:20,q:0}];
+let items=[{n:'Chai',p:10,q:0,c:'Chai/Coffee'},{n:'Nasta',p:20,q:0,c:'Nasta'},{n:'Cold Drink',p:20,q:0,c:'Cold Drink'}];
+const CATS=['Sab','Nasta','Chai/Coffee','Cold Drink','Icecream','Snacks/Namkeen','Others'];
+let tab='Sab';
+function catOf(it){if(it.c)return it.c==='Chai'?'Chai/Coffee':it.c;const n=(it.n||'').toLowerCase();if(/chai|tea|coffee/.test(n))return 'Chai/Coffee';if(/namkeen|chips|snack|wafer|bhujia|sev|mixture/.test(n))return 'Snacks/Namkeen';if(/ice|kulfi/.test(n))return 'Icecream';if(/cold|coke|pepsi|soda|juice|drink|lassi/.test(n))return 'Cold Drink';return 'Nasta'}
+function ctabs(){$('hn').textContent=$('sn').value;$('ctabs').innerHTML=CATS.map((c,k)=>'<button class="tb'+(tab===c?' on':'')+'" onclick="setTab('+k+')">'+c+'</button>').join('')}
+function setTab(k){tab=CATS[k];draw()}
 let billNo=1;
-try{const d=JSON.parse(localStorage.getItem(K('chai'))||'null');if(d){items=d.items.map(i=>({...i,q:0}));$('sn').value=(d.sn&&d.sn!=='Hotel Sharma Chai Nasta')?d.sn:'Hotel Aaradhana';$('sp').value=d.sp||'';$('gp').value=d.gp||0;$('up').value=d.up||'';billNo=d.bn||1}}catch(e){}
+try{const d=JSON.parse(localStorage.getItem(K('chai'))||'null');if(d){items=d.items.map(i=>({...i,q:0}));$('sn').value=(d.sn&&d.sn!=='Hotel Sharma Chai Nasta')?d.sn:'Hotel Aaradhana';$('sp').value=d.sp||'';if(d.pro&&d.pro!=='Kaivalya Tawar')$('pro').value=d.pro;$('gp').value=d.gp||0;$('up').value=d.up||'';billNo=d.bn||1}}catch(e){}
 function save(){try{localStorage.setItem(K('chai'),JSON.stringify({items,sn:$('sn').value,sp:$('sp').value,pro:$('pro').value,gp:$('gp').value,up:$('up').value,bn:billNo}))}catch(e){}}
 function draw(){
-  $('items').innerHTML=items.map((it,i)=>'<div class="item"><div><input class="nm" placeholder="Item ka naam" value="'+esc(it.n)+'" onchange="items['+i+'].n=this.value;save()"></div><input type="number" value="'+it.p+'" onchange="items['+i+'].p=+this.value||0;save();calc()"><div class="q"><button onclick="chg('+i+',-1)">−</button><span>'+it.q+'</span><button onclick="chg('+i+',1)">+</button></div><button class="d" onclick="del('+i+')">×</button></div>').join('');
+  const hh=items.map((it,i)=>(tab!=='Sab'&&catOf(it)!==tab)?'':'<div class="item"><div><input class="nm" placeholder="Item ka naam" value="'+esc(it.n)+'" onchange="items['+i+'].n=this.value;save()"></div><input type="number" value="'+it.p+'" onchange="items['+i+'].p=+this.value||0;save();calc()"><div class="q"><button onclick="chg('+i+',-1)">−</button><span>'+it.q+'</span><button onclick="chg('+i+',1)">+</button></div><button class="d" onclick="del('+i+')">×</button></div>').join('');
+  $('items').innerHTML=hh||'<p style="color:var(--muted);margin:6px">Is menu mein abhi koi item nahi. Neeche + Naya item jodo dabao.</p>';ctabs();
   calc();
 }
 function chg(i,d){items[i].q=Math.max(0,items[i].q+d);draw()}
 let orders=[{q:[],cu:''}],cur=0;
-function addItem(){stash();items.push({n:'',p:0,q:0});orders.forEach(o=>o.q.push(0));save();draw();const a=document.querySelectorAll('.item input.nm');a[a.length-1].focus()}
+function addItem(){stash();items.push({n:'',p:0,q:0,c:tab==='Sab'?'Nasta':tab});orders.forEach(o=>o.q.push(0));save();draw();const a=document.querySelectorAll('.item input.nm');a[a.length-1].focus()}
 function del(i){
   stash();const it=items[i],qs=orders.map(o=>o.q[i]||0);
   items.splice(i,1);orders.forEach(o=>o.q.splice(i,1));save();draw();
@@ -100,9 +108,9 @@ function load(){items.forEach((it,i)=>it.q=orders[cur].q[i]||0);$('cu').value=or
 function hideBill(){$('bill').style.display='none';$('pr').style.display='none'}
 function sw(k){stash();cur=k;load();hideBill();draw()}
 function newOrder(){stash();orders.push({q:items.map(()=>0),cu:''});cur=orders.length-1;load();hideBill();draw()}
-function tt(qs){const sub=items.reduce((s,it,i)=>s+it.p*(qs[i]||0),0);return sub+Math.round(sub*(+$('gp').value||0))/100}
+function tt(qs){const sub=items.reduce((s,it,i)=>s+it.p*(qs[i]||0),0);return sub}
 function tabs(){$('tabs').innerHTML=orders.map((o,k)=>{const c=k==cur;const qs=c?items.map(i=>i.q):o.q;const nm=(c?$('cu').value:o.cu)||('Customer '+(k+1));return '<button class="tb'+(c?' on':'')+'" onclick="sw('+k+')">'+esc(nm)+'<br><small>Rs. '+fmt(tt(qs))+'</small></button>'}).join('')+'<button class="tb add" onclick="newOrder()">+ Naya customer</button>'}
-function sums(){const sub=items.reduce((s,i)=>s+i.p*i.q,0);let d=+$('dc').value||0;if($('dt').value==='%')d=Math.round(sub*d)/100;d=Math.min(d,sub);const g=Math.round((sub-d)*(+$('gp').value||0))/100;return{sub,d,g,t:sub-d+g}}
+function sums(){const sub=items.reduce((s,i)=>s+i.p*i.q,0);let d=+$('dc').value||0;if($('dt').value==='%')d=Math.round(sub*d)/100;d=Math.min(d,sub);const g=0;return{sub,d,g,t:sub-d+g}}
 function calc(){$('tot').textContent='Rs. '+fmt(sums().t);tabs()}
 function clr(){if(orders.length>1){orders.splice(cur,1);cur=Math.max(0,cur-1);load()}else{items.forEach(i=>i.q=0);orders[0].cu='';orders[0].bn=0;$('cu').value=''}$('dc').value=0;hideBill();draw()}
 function show(){
@@ -179,7 +187,7 @@ async function bkp(){
   try{
     const dl=window.claude?await claude.use('downloads'):null;
     if(!dl){toast('Backup sirf Chrome wale link mein chalta hai');return}
-    const o={v:1,hist:hist,exp:exp,sett:sett,items:items.map(i=>({n:i.n,e:i.e||'',p:i.p})),sn:$('sn').value,pro:$('pro').value,sp:$('sp').value,gp:$('gp').value,up:$('up').value,bn:billNo};
+    const o={v:1,hist:hist,exp:exp,sett:sett,items:items.map(i=>({n:i.n,e:i.e||'',p:i.p,c:catOf(i)})),sn:$('sn').value,pro:$('pro').value,sp:$('sp').value,gp:$('gp').value,up:$('up').value,bn:billNo};
     await dl.save({filename:'HotelAaradhana_'+UK+'_backup.json',data:new Blob([JSON.stringify(o)],{type:'application/json'})});
   }catch(e){if(!e||e.code!=='declined')toast('Backup nahi ban paya')}
 }
@@ -188,8 +196,8 @@ function rst(inp){
   r.onload=()=>{try{
     const o=JSON.parse(r.result);if(!Array.isArray(o.hist))throw 0;
     hist=o.hist;exp=o.exp||[];sett=o.sett||[];
-    items=(o.items||[]).map(i=>({n:i.n,e:i.e||'',p:+i.p||0,q:0}));orders=[{q:items.map(()=>0),cu:''}];cur=0;
-    $('sn').value=o.sn||$('sn').value;$('sp').value=o.sp||'';$('gp').value=o.gp||0;$('up').value=o.up||'';billNo=o.bn||billNo;
+    items=(o.items||[]).map(i=>({n:i.n,e:i.e||'',p:+i.p||0,c:i.c,q:0}));orders=[{q:items.map(()=>0),cu:''}];cur=0;
+    $('sn').value=o.sn||$('sn').value;$('sp').value=o.sp||'';if(o.pro)$('pro').value=o.pro;$('gp').value=o.gp||0;$('up').value=o.up||'';billNo=o.bn||billNo;
     saveH();saveE();saveS();save();hideBill();draw();drawH();toast('Restore ho gaya ✅');
   }catch(e){toast('File sahi nahi hai')}};
   r.readAsText(f);inp.value='';
@@ -225,13 +233,13 @@ async function lgGo(){
     us[n]={s:salt,h:await hp(p,salt)};
     try{localStorage.setItem('chai_users',JSON.stringify(us));
       if(first)['chai','chai_hist','chai_exp','chai_sett'].forEach(k=>{const v=localStorage.getItem(k);if(v!=null)localStorage.setItem('u_'+n+'_'+k,v)})}catch(e){}
-  }else if(!us[n]){
+  }else if(!us[n]||us[n].h!==await hp(p,us[n].s)){
     let ok=false;
     try{if(CLOUD){const sid=await hp(n+':'+p,'shop');const c=await(await fetch(CLOUD.replace(/\/$/,'')+'/shops/'+sid+'.json')).json();ok=!!c}}catch(e){}
-    if(!ok){$('lgm').textContent='Ye user is phone par nahi mila. Internet chalu karke sahi naam aur password likho.';return}
+    if(!ok){$('lgm').textContent=us[n]?'Naam ya password galat hai':'Ye user is phone par nahi mila. Internet chalu karke sahi naam aur password likho.';return}
     const salt=Math.random().toString(36).slice(2);us[n]={s:salt,h:await hp(p,salt)};
     try{localStorage.setItem('chai_users',JSON.stringify(us))}catch(e){}
-  }else if(us[n].h!==await hp(p,us[n].s)){$('lgm').textContent='Naam ya password galat hai';return}
+  }
   try{localStorage.setItem('chai_user',n)}catch(e){$('lgm').textContent='Phone ne login yaad nahi rakha';return}
   try{localStorage.setItem('chai_sid',await hp(n+':'+p,'shop'))}catch(e){}
   location.reload();
@@ -244,7 +252,7 @@ let syncing=false,pt=null;
 const bk=x=>x.id+'_'+(x.ts||x.d)+'_'+x.d;
 function saveG(){try{localStorage.setItem(K('chai_gone'),JSON.stringify(gone))}catch(e){}}
 function cloudUrl(){let sid='';try{sid=localStorage.getItem('chai_sid')||''}catch(e){}return CLOUD&&sid?CLOUD.replace(/\/$/,'')+'/shops/'+sid+'.json':''}
-function snap(){return{hist:hist,sett:sett,gone:gone,items:items.map(i=>({n:i.n,p:i.p})),sn:$('sn').value,sp:$('sp').value,gp:$('gp').value,up:$('up').value,bn:billNo}}
+function snap(){return{hist:hist,sett:sett,gone:gone,items:items.map(i=>({n:i.n,p:i.p,c:catOf(i)})),sn:$('sn').value,sp:$('sp').value,pro:$('pro').value,gp:$('gp').value,up:$('up').value,bn:billNo}}
 function push(){if(syncing||!cloudUrl())return;clearTimeout(pt);pt=setTimeout(doPush,1500)}
 async function doPush(){try{await pull();await fetch(cloudUrl(),{method:'PUT',body:JSON.stringify(snap())})}catch(e){}}
 async function pull(){const u=cloudUrl();if(!u)return;try{const c=await(await fetch(u)).json();if(c)mergeIn(c,false)}catch(e){}}
@@ -256,7 +264,7 @@ function mergeIn(c,adopt){
   hist=Object.values(m).filter(x=>!g.has(bk(x))).sort((a,b)=>(a.ts||0)-(b.ts||0));
   const sm={};[...sett,...(c.sett||[])].forEach(x=>{sm[x.n+'|'+x.a+'|'+x.d]=x});sett=Object.values(sm);
   billNo=Math.max(billNo,c.bn||0);
-  if(adopt&&c.items&&c.items.length){items=c.items.map(i=>({n:i.n,p:+i.p||0,q:0}));orders=[{q:items.map(()=>0),cu:''}];cur=0;$('sn').value=c.sn||$('sn').value;$('sp').value=c.sp||'';$('gp').value=c.gp||0;$('up').value=c.up||'';hideBill()}
+  if(adopt&&c.items&&c.items.length){items=c.items.map(i=>({n:i.n,p:+i.p||0,c:i.c,q:0}));orders=[{q:items.map(()=>0),cu:''}];cur=0;$('sn').value=c.sn||$('sn').value;$('sp').value=c.sp||'';if(c.pro)$('pro').value=c.pro;$('gp').value=c.gp||0;$('up').value=c.up||'';hideBill()}
   saveH();saveS();save();saveG();
   syncing=false;
   if(adopt)draw();
@@ -264,6 +272,57 @@ function mergeIn(c,adopt){
 }
 const _s1=save,_s2=saveH,_s3=saveS;
 save=()=>{_s1();push()};saveH=()=>{_s2();push()};saveS=()=>{_s3();push()};
+function payAsk(){
+  if(!items.some(i=>i.q>0)){toast('Pehle item chuno');return}
+  $('mn').style.display='block';
+  $('mnb').innerHTML='<b>Payment kaise hua?</b>'+['Cash','UPI','Udhaar'].map((x,k)=>'<button class="sec" style="width:100%;margin-top:10px" onclick="payGo('+k+')">'+x+'</button>').join('')+'<button style="width:100%;margin-top:10px" onclick="menu(9)">Wapas</button>';
+}
+function payGo(k){
+  const v=['Cash','UPI','Udhaar'][k];
+  if(v==='Udhaar'&&!$('cu').value.trim()){
+    $('mnb').innerHTML='<b>Udhaar: customer ka naam</b><input id="f1" placeholder="Naam" style="margin-top:10px"><p id="fm" style="color:#c0392b;font-size:13px;min-height:18px;margin:8px 0"></p><div class="row"><button class="sec" onclick="payAsk()">Wapas</button><button onclick="payUd()">Bill banao</button></div>';return}
+  $('pm').value=v;$('mn').style.display='none';show();
+}
+function payUd(){const n=$('f1').value.trim();if(!n){$('fm').textContent='Naam likho';return}$('cu').value=n;calc();$('pm').value='Udhaar';$('mn').style.display='none';show()}
+function menu(m){
+  const b=$('mnb'),bt='style="width:100%;margin-top:10px"';
+  $('mn').style.display='block';
+  if(m===9){$('mn').style.display='none';return}
+  if(m===7){$('mn').style.display='none';hm=3;$('hv').style.display='block';drawH();$('hv').scrollIntoView({behavior:'smooth'});return}
+  if(!m){b.innerHTML='<b>Settings</b>'+[['Khatabook (Udhaar)',7],['Dukaan ka naam',4],['Phone number',5],['Proprietor (malik)',6],['UPI ID',1],['User naam badlo',2],['Password badlo',3]].map(x=>'<button class="sec" '+bt+' onclick="menu('+x[1]+')">'+x[0]+'</button>').join('')+'<button '+bt+' onclick="menu(9)">Band karo</button>';return}
+  const foot='<p id="fm" style="color:#c0392b;font-size:13px;min-height:18px;margin:8px 0"></p><div class="row"><button class="sec" onclick="menu()">Wapas</button><button onclick="sv('+m+')">Save</button></div>';
+  if(m===1)b.innerHTML='<b>UPI ID</b><label>UPI ID (bill par QR ke liye)</label><input id="f1" placeholder="naam@upi" value="'+esc($('up').value)+'">'+foot;
+  if(m>=4&&m<=6){const L=['Dukaan ka naam','Phone number','Proprietor (malik ka naam)'][m-4],t=['sn','sp','pro'][m-4];b.innerHTML='<b>'+L+'</b><label>'+L+'</label><input id="f1" value="'+esc($(t).value)+'">'+foot}
+  if(m===2)b.innerHTML='<b>User naam badlo</b><label>Naya user naam</label><input id="f1" autocapitalize="none"><label>Abhi ka password</label><input id="f2" type="password">'+foot;
+  if(m===3)b.innerHTML='<b>Password badlo</b><label>Abhi ka password</label><input id="f1" type="password"><label>Naya password (kam se kam 4 akshar)</label><input id="f2" type="password">'+foot;
+}
+async function sv(m){
+  const fm=$('fm'),us=getUsers(),u=us[UK];
+  if(m===1){$('up').value=$('f1').value.trim();save();$('mn').style.display='none';toast('UPI ID save ho gaya');return}
+  if(m>=4&&m<=6){$(['sn','sp','pro'][m-4]).value=$('f1').value.trim();save();draw();$('mn').style.display='none';toast('Save ho gaya');return}
+  const oldPw=m===2?$('f2').value:$('f1').value;
+  if(!u||u.h!==await hp(oldPw,u.s)){fm.textContent='Abhi ka password galat hai';return}
+  try{
+    if(m===2){
+      const nn=$('f1').value.trim().toLowerCase();
+      if(!nn){fm.textContent='Naya naam likho';return}
+      if(us[nn]){fm.textContent='Ye naam pehle se hai';return}
+      ['chai','chai_hist','chai_exp','chai_sett','chai_gone'].forEach(k=>{const v=localStorage.getItem('u_'+UK+'_'+k);if(v!=null){localStorage.setItem('u_'+nn+'_'+k,v);localStorage.removeItem('u_'+UK+'_'+k)}});
+      us[nn]=u;delete us[UK];
+      localStorage.setItem('chai_users',JSON.stringify(us));
+      localStorage.setItem('chai_user',nn);
+      localStorage.setItem('chai_sid',await hp(nn+':'+oldPw,'shop'));
+    }else{
+      const np=$('f2').value;
+      if(np.length<4){fm.textContent='Naya password kam se kam 4 akshar ka rakho';return}
+      const salt=Math.random().toString(36).slice(2);
+      us[UK]={s:salt,h:await hp(np,salt)};
+      localStorage.setItem('chai_users',JSON.stringify(us));
+      localStorage.setItem('chai_sid',await hp(UK+':'+np,'shop'));
+    }
+  }catch(e){fm.textContent='Save nahi ho paya';return}
+  location.reload();
+}
 function topList(a,title){
   const t={};a.forEach(x=>x.it.forEach(i=>{const e=t[i.n]=t[i.n]||{q:0,amt:0};e.q+=i.q;e.amt+=i.q*i.p}));
   const k=Object.keys(t).sort((x,y)=>t[y].q-t[x].q);
