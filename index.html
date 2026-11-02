@@ -60,7 +60,7 @@ select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;ba
 </div>
 
 <div id="tabs" class="tabs"></div>
-<div style="margin-bottom:8px"><button class="sec" style="width:100%" onclick="voice()">🎤 Bolkar order likho (Hindi)</button></div>
+<div class="row" style="margin-bottom:8px"><button class="sec" style="flex:3" onclick="voice()">🎤 Bolkar order likho</button><button class="sec" id="vl" style="flex:1" onclick="vlSw()">हिंदी</button></div>
 <div id="ctabs" class="tabs"></div>
 <div class="card" id="items"></div>
 <button class="sec" style="width:100%;margin-bottom:12px" onclick="addItem()">+ Naya item jodo</button>
@@ -86,7 +86,7 @@ let items=[{n:'Chai',p:10,q:0,c:'Chai/Coffee'},{n:'Nasta',p:20,q:0,c:'Nasta'},{n
 const CATS=['Sab','Nasta','Chai/Coffee','Cold Drink','Icecream','Snacks/Namkeen','Others'];
 let tab='Sab';
 function catOf(it){if(it.c)return it.c==='Chai'?'Chai/Coffee':it.c;const n=(it.n||'').toLowerCase();if(/chai|tea|coffee/.test(n))return 'Chai/Coffee';if(/namkeen|chips|snack|wafer|bhujia|sev|mixture/.test(n))return 'Snacks/Namkeen';if(/ice|kulfi/.test(n))return 'Icecream';if(/cold|coke|pepsi|soda|juice|drink|lassi/.test(n))return 'Cold Drink';return 'Nasta'}
-function ctabs(){$('hn').textContent=$('sn').value;$('ctabs').innerHTML=CATS.map((c,k)=>'<button class="tb'+(tab===c?' on':'')+'" onclick="setTab('+k+')">'+c+'</button>').join('')}
+function ctabs(){$('hn').textContent=$('sn').value;$('vl').textContent=VL==='mr-IN'?'मराठी':'हिंदी';$('ctabs').innerHTML=CATS.map((c,k)=>'<button class="tb'+(tab===c?' on':'')+'" onclick="setTab('+k+')">'+c+'</button>').join('')}
 function setTab(k){tab=CATS[k];draw()}
 let billNo=1;
 try{const d=JSON.parse(localStorage.getItem(K('chai'))||'null');if(d){items=d.items.map(i=>({...i,q:0}));$('sn').value=(d.sn&&d.sn!=='Hotel Sharma Chai Nasta')?d.sn:'Hotel Aaradhana';$('sp').value=d.sp||'';if(d.pro&&d.pro!=='Kaivalya Tawar')$('pro').value=d.pro;$('gp').value=d.gp||0;$('up').value=d.up||'';billNo=d.bn||1}}catch(e){}
@@ -298,6 +298,10 @@ function timeBlock(a){
 }
 const DEV={'चाय':'chai','चाए':'chai','कॉफी':'coffee','कॉफ़ी':'coffee','कोफी':'coffee','समोसा':'samosa','समोसे':'samosa','कचौड़ी':'kachori','कचोरी':'kachori','पोहा':'poha','पोहे':'poha','वड़ा':'vada','वडा':'vada','पाव':'pav','भजिया':'bhajiya','नाश्ता':'nasta','नास्ता':'nasta','कोल्ड':'cold','ड्रिंक':'drink','आइसक्रीम':'icecream','आइस':'ice','क्रीम':'cream','कुल्फी':'kulfi','लस्सी':'lassi','जूस':'juice','बिस्कुट':'biscuit','मैगी':'maggi','सैंडविच':'sandwich','नमकीन':'namkeen','चिप्स':'chips','कोक':'coke','पेप्सी':'pepsi'};
 const NUM={'एक':1,'दो':2,'तीन':3,'चार':4,'पांच':5,'पाँच':5,'छह':6,'छे':6,'छः':6,'सात':7,'आठ':8,'नौ':9,'दस':10,ek:1,do:2,teen:3,char:4,paanch:5,panch:5,chhe:6,che:6,saat:7,aath:8,nau:9,das:10};
+let VL='hi-IN';try{VL=localStorage.getItem('chai_vl')||'hi-IN'}catch(e){}
+function vlSw(){VL=VL==='hi-IN'?'mr-IN':'hi-IN';try{localStorage.setItem('chai_vl',VL)}catch(e){}ctabs();toast(VL==='mr-IN'?'Ab Marathi mein boliye':'Ab Hindi mein boliye')}
+Object.assign(DEV,{'चहा':'chai','चाह':'chai','वडापाव':'vada','मिसळ':'misal','भजी':'bhaji','आईस्क्रीम':'icecream','आइस्क्रीम':'icecream','शेव':'sev','चिवडा':'chivda','साबुदाणा':'sabudana','खिचडी':'khichdi','इडली':'idli','डोसा':'dosa','उपमा':'upma','शिरा':'sheera','ताक':'taak','थंड':'cold','पाणी':'pani'});
+Object.assign(NUM,{'दोन':2,'पाच':5,'सहा':6,'नऊ':9,'दहा':10,don:2,pach:5,saha:6,daha:10});
 function applyVoice(t){
   t=t.toLowerCase().replace(/[०-९]/g,c=>'०१२३४५६७८९'.indexOf(c));
   let pend=0,last=-1,got=[];
@@ -313,9 +317,10 @@ function applyVoice(t){
   draw();toast('Joda: '+got.join(', '));
 }
 function voice(){
+  if(window.AndroidVoice){AndroidVoice.start(VL);return}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){toast('Is phone ya app mein awaaz wala order nahi chalta');return}
-  try{const r=new SR();r.lang='hi-IN';r.interimResults=false;
+  try{const r=new SR();r.lang=VL;r.interimResults=false;
     r.onresult=e=>applyVoice(e.results[0][0].transcript);
     r.onerror=e=>toast(e.error==='not-allowed'?'Mic ki permission nahi mili':'Awaaz samajh nahi aayi');
     r.start();toast('Boliye... jaise: do chai ek samosa');

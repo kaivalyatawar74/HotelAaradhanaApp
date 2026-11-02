@@ -2,6 +2,9 @@ package com.hotelbill.app;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.Intent;
+import android.speech.RecognizerIntent;
+import java.util.ArrayList;
 import android.print.PrintAttributes;
 import android.print.PrintManager;
 import android.webkit.JavascriptInterface;
@@ -45,7 +48,35 @@ public class MainActivity extends Activity {
                 });
             }
         }, "AndroidPrint");
+        web.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void start(String lang) {
+                runOnUiThread(() -> {
+                    try {
+                        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
+                        i.putExtra(RecognizerIntent.EXTRA_PROMPT, "Boliye: do chai ek samosa");
+                        startActivityForResult(i, 77);
+                    } catch (Exception e) {
+                        web.evaluateJavascript("toast('Is phone mein awaaz ki service nahi hai')", null);
+                    }
+                });
+            }
+        }, "AndroidVoice");
         web.loadUrl("file:///android_asset/index.html");
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req == 77 && res == RESULT_OK && data != null) {
+            ArrayList<String> r = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (r != null && !r.isEmpty()) {
+                String t = r.get(0).replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ");
+                web.evaluateJavascript("applyVoice('" + t + "')", null);
+            }
+        }
     }
 
     @Override
