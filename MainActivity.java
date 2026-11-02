@@ -24,11 +24,11 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, android.webkit.WebResourceRequest r) {
                 android.net.Uri u = r.getUrl();
-                if ("rawbt".equals(u.getScheme())) {
+                if ("rawbt".equals(u.getScheme()) || "whatsapp".equals(u.getScheme()) || "wa.me".equals(u.getHost())) {
                     try {
                         startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, u));
                     } catch (Exception e) {
-                        android.widget.Toast.makeText(MainActivity.this, "Pehle RawBT app install karo", android.widget.Toast.LENGTH_LONG).show();
+                        android.widget.Toast.makeText(MainActivity.this, "Pehle ye app install karo (RawBT ya WhatsApp)", android.widget.Toast.LENGTH_LONG).show();
                     }
                     return true;
                 }

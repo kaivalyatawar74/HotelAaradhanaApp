@@ -60,6 +60,7 @@ select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;ba
 </div>
 
 <div id="tabs" class="tabs"></div>
+<div style="margin-bottom:8px"><button class="sec" style="width:100%" onclick="voice()">🎤 Bolkar order likho (Hindi)</button></div>
 <div id="ctabs" class="tabs"></div>
 <div class="card" id="items"></div>
 <button class="sec" style="width:100%;margin-bottom:12px" onclick="addItem()">+ Naya item jodo</button>
@@ -69,7 +70,7 @@ select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;ba
 </div>
 
 <div id="bill" style="display:none"></div>
-<div class="row np" id="pr" style="display:none;margin-top:12px;flex-wrap:wrap"><button onclick="savePdf()">PDF save</button><button style="flex:1 1 100%" onclick="btPrint()">🖨️ Bluetooth Print</button></div>
+<div class="row np" id="pr" style="display:none;margin-top:12px;flex-wrap:wrap"><button onclick="savePdf()">PDF save</button><button style="flex:1 1 100%" onclick="btPrint()">🖨️ Bluetooth Print</button><button class="sec" style="flex:1 1 100%" onclick="waAsk()">💬 WhatsApp par bhejo</button></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -272,6 +273,54 @@ function mergeIn(c,adopt){
 }
 const _s1=save,_s2=saveH,_s3=saveS;
 save=()=>{_s1();push()};saveH=()=>{_s2();push()};saveS=()=>{_s3();push()};
+function billText(L){
+  const s=L.s,d=new Date(L.now);
+  return $('sn').value+'\nProprietor: '+$('pro').value+($('sp').value?'\nPh: '+$('sp').value:'')+'\nBill #'+String(L.bn).padStart(4,'0')+'  '+d.toLocaleDateString('en-IN')+'\n----------------\n'
+   +L.sel.map(i=>(i.n||'Item')+'  '+i.q+' x '+i.p+' = '+fmt(i.q*i.p)).join('\n')+'\n----------------\nTotal: Rs. '+fmt(s.t)+(L.pay?'\nPayment: '+L.pay:'')+'\nDhanyawad...🙏🏻\nDeveloped by Kaivalya Tawar';
+}
+function waAsk(){
+  if(!lastBill){toast('Pehle Bill banao');return}
+  $('mn').style.display='block';
+  $('mnb').innerHTML='<b>WhatsApp par bhejo</b><label>Customer ka mobile number</label><input id="f1" type="tel" placeholder="10 akshar ka number"><p id="fm" style="color:#c0392b;font-size:13px;min-height:18px;margin:8px 0"></p><div class="row"><button class="sec" onclick="menu(9)">Wapas</button><button onclick="waGo()">Bhejo</button></div>';
+}
+function waGo(){
+  let n=$('f1').value.replace(/\D/g,'');if(n.length===10)n='91'+n;
+  if(n.length<11){$('fm').textContent='Sahi mobile number likho';return}
+  const url='https://wa.me/'+n+'?text='+encodeURIComponent(billText(lastBill));
+  $('mn').style.display='none';
+  if(window.AndroidPrint)window.location.href=url;else window.open(url,'_blank');
+}
+function timeBlock(a){
+  const B=[['Subah (5-11)',5,11],['Dopahar (11-4)',11,16],['Shaam (4-9)',16,21],['Raat (9-5)',21,29]],t=B.map(b=>({n:b[0],c:0,m:0}));
+  a.forEach(x=>{if(!x.ts)return;let h=new Date(x.ts).getHours();if(h<5)h+=24;B.forEach((b,k)=>{if(h>=b[1]&&h<b[2]){t[k].c++;t[k].m+=x.tot}})});
+  const mx=Math.max(1,...t.map(x=>x.m)),best=t.reduce((p,c)=>c.m>p.m?c:p,t[0]);
+  return '<div style="border-top:1px solid var(--line);padding:10px 0 4px"><b>Kis time bheed rehti hai</b>'+t.map(x=>'<div style="margin:8px 0 4px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>'+x.n+'</span><span><b>'+x.c+'</b> bill · Rs. '+fmt(x.m)+'</span></div><div style="height:6px;border-radius:3px;background:var(--line);margin-top:3px"><div style="height:6px;border-radius:3px;background:var(--accent);width:'+Math.max(3,Math.round(x.m/mx*100))+'%"></div></div></div>').join('')+(best.m?'<div style="font-size:13px;color:var(--muted);margin-top:6px">Sabse jyada bikri: '+best.n+'</div>':'')+'</div>';
+}
+const DEV={'चाय':'chai','चाए':'chai','कॉफी':'coffee','कॉफ़ी':'coffee','कोफी':'coffee','समोसा':'samosa','समोसे':'samosa','कचौड़ी':'kachori','कचोरी':'kachori','पोहा':'poha','पोहे':'poha','वड़ा':'vada','वडा':'vada','पाव':'pav','भजिया':'bhajiya','नाश्ता':'nasta','नास्ता':'nasta','कोल्ड':'cold','ड्रिंक':'drink','आइसक्रीम':'icecream','आइस':'ice','क्रीम':'cream','कुल्फी':'kulfi','लस्सी':'lassi','जूस':'juice','बिस्कुट':'biscuit','मैगी':'maggi','सैंडविच':'sandwich','नमकीन':'namkeen','चिप्स':'chips','कोक':'coke','पेप्सी':'pepsi'};
+const NUM={'एक':1,'दो':2,'तीन':3,'चार':4,'पांच':5,'पाँच':5,'छह':6,'छे':6,'छः':6,'सात':7,'आठ':8,'नौ':9,'दस':10,ek:1,do:2,teen:3,char:4,paanch:5,panch:5,chhe:6,che:6,saat:7,aath:8,nau:9,das:10};
+function applyVoice(t){
+  t=t.toLowerCase().replace(/[०-९]/g,c=>'०१२३४५६७८९'.indexOf(c));
+  let pend=0,last=-1,got=[];
+  t.split(/\s+/).forEach(w=>{
+    if(/^\d+$/.test(w)||NUM[w]){const v=/^\d+$/.test(w)?+w:NUM[w];if(last>=0&&items[last]._v===1){items[last].q+=v-1;items[last]._v=v;got[got.length-1]=(items[last].n||'Item')+' x'+items[last].q}else pend=v;return}
+    const r=DEV[w]||w;if(r.length<3)return;
+    const i=items.findIndex(it=>{const n=(it.n||'').toLowerCase();return n&&(n.includes(r)||n.split(' ')[0]===r||(w.length>=2&&n.includes(w)))});
+    if(i<0)return;if(i===last)return;
+    const q=pend||1;items[i].q+=q;items[i]._v=q;pend=0;last=i;got.push((items[i].n||'Item')+' x'+items[i].q);
+  });
+  items.forEach(i=>{delete i._v});
+  if(!got.length){toast('Samajh nahi aaya: '+t);return}
+  draw();toast('Joda: '+got.join(', '));
+}
+function voice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Is phone ya app mein awaaz wala order nahi chalta');return}
+  try{const r=new SR();r.lang='hi-IN';r.interimResults=false;
+    r.onresult=e=>applyVoice(e.results[0][0].transcript);
+    r.onerror=e=>toast(e.error==='not-allowed'?'Mic ki permission nahi mili':'Awaaz samajh nahi aayi');
+    r.start();toast('Boliye... jaise: do chai ek samosa');
+  }catch(e){toast('Awaaz shuru nahi ho payi')}
+}
 function payAsk(){
   if(!items.some(i=>i.q>0)){toast('Pehle item chuno');return}
   $('mn').style.display='block';
@@ -358,7 +407,7 @@ function drawH(){
   } else if(hm===3){
     h+=udhaarUI();
   } else {
-    h+=topList(tt,'Aaj')+topList(tm,'Is mahine')+topList(hist,'Ab tak (total)');
+    h+=topList(tt,'Aaj')+topList(tm,'Is mahine')+topList(hist,'Ab tak (total)')+timeBlock(hist);
   }
   h+='<div class="row" style="margin-top:10px"><button class="sec" onclick="repPdf()">📄 Aaj ki report PDF</button></div><div class="row" style="margin-top:8px"><button class="sec" onclick="bkp()">💾 Backup</button><button class="sec" onclick="pick()">📥 Restore</button></div><input type="file" id="rf" accept=".json" style="display:none" onchange="rst(this)">';
   h+='<button class="sec" style="width:100%;margin-top:10px;color:#c0392b;border-color:#c0392b" id="clrb" onclick="clrH()">History saaf karo</button>';
