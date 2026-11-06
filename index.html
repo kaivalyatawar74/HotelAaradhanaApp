@@ -16,7 +16,7 @@ h1{font-size:20px;margin:4px 0 12px;color:var(--accent)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
 input{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-size:15px}
 label{font-size:12px;color:var(--muted);display:block;margin:6px 0 3px}
-.item{display:grid;grid-template-columns:1fr 62px 100px 36px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.item{display:grid;grid-template-columns:1fr 62px 104px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .item:last-child{border:0}
 .item input.nm{text-align:left;font-weight:700;font-size:16px}.item .d{background:transparent;color:#c0392b;padding:0;font-size:24px;height:36px}
 .item input{padding:8px;text-align:right}
@@ -92,7 +92,7 @@ let billNo=1;
 try{const d=JSON.parse(localStorage.getItem(K('chai'))||'null');if(d){items=d.items.map(i=>({...i,q:0}));$('sn').value=(d.sn&&d.sn!=='Hotel Sharma Chai Nasta')?d.sn:'Hotel Aaradhana';$('sp').value=d.sp||'';if(d.pro&&d.pro!=='Kaivalya Tawar')$('pro').value=d.pro;$('gp').value=d.gp||0;$('up').value=d.up||'';billNo=d.bn||1}}catch(e){}
 function save(){try{localStorage.setItem(K('chai'),JSON.stringify({items,sn:$('sn').value,sp:$('sp').value,pro:$('pro').value,gp:$('gp').value,up:$('up').value,bn:billNo}))}catch(e){}}
 function draw(){
-  const hh=items.map((it,i)=>(tab!=='Sab'&&catOf(it)!==tab)?'':'<div class="item"><div><input class="nm" placeholder="Item ka naam" value="'+esc(it.n)+'" onchange="items['+i+'].n=this.value;save()"></div><input type="number" value="'+it.p+'" onchange="items['+i+'].p=+this.value||0;save();calc()"><div class="q"><button onclick="chg('+i+',-1)">−</button><span>'+it.q+'</span><button onclick="chg('+i+',1)">+</button></div><button class="d" onclick="del('+i+')">×</button></div>').join('');
+  const hh=items.map((it,i)=>(tab!=='Sab'&&catOf(it)!==tab)?'':'<div class="item"><div><input class="nm" placeholder="Item ka naam" style="font-size:'+((it.n||'').length>24?13:16)+'px" value="'+esc(it.n)+'" onchange="items['+i+'].n=this.value;save()"></div><input type="number" value="'+it.p+'" onchange="items['+i+'].p=+this.value||0;save();calc()"><div class="q"><button onclick="chg('+i+',-1)">−</button><span>'+it.q+'</span><button onclick="chg('+i+',1)">+</button></div></div>').join('');
   $('items').innerHTML=hh||'<p style="color:var(--muted);margin:6px">Is menu mein abhi koi item nahi. Neeche + Naya item jodo dabao.</p>';ctabs();
   calc();
 }
@@ -161,7 +161,7 @@ function clrH(){
   if(b){b.textContent='Pakka? Dobara dabao';b.style.background='#c0392b';b.style.color='#fff'}
   setTimeout(()=>{const b=$('clrb');if(b&&Date.now()-clrArm>=3900){clrArm=0;b.textContent='History saaf karo';b.style.background='';b.style.color='#c0392b'}},4000);
 }
-function toast(m,fn){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;max-width:90%;text-align:center';document.body.appendChild(t)}t.textContent=m;if(fn){const b=document.createElement('button');b.textContent='Undo';b.style.cssText='margin-left:10px;padding:4px 10px;font-size:13px';b.onclick=()=>{fn();t.style.display='none'};t.appendChild(b)}t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},fn?5000:2500)}
+function toast(m,fn){let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:60;max-width:90%;text-align:center';document.body.appendChild(t)}t.textContent=m;if(fn){const b=document.createElement('button');b.textContent='Undo';b.style.cssText='margin-left:10px;padding:4px 10px;font-size:13px';b.onclick=()=>{fn();t.style.display='none'};t.appendChild(b)}t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none'},fn?5000:2500)}
 let exp=[];try{exp=JSON.parse(localStorage.getItem(K('chai_exp'))||'[]')}catch(e){}
 function saveE(){try{localStorage.setItem(K('chai_exp'),JSON.stringify(exp))}catch(e){}}
 function ES(f){return exp.filter(f).reduce((s,x)=>s+x.a,0)}
@@ -338,12 +338,16 @@ function payGo(k){
   $('pm').value=v;$('mn').style.display='none';show();
 }
 function payUd(){const n=$('f1').value.trim();if(!n){$('fm').textContent='Naam likho';return}$('cu').value=n;calc();$('pm').value='Udhaar';$('mn').style.display='none';show()}
+let dmArm=-1;
+function delM(i){if(dmArm===i){dmArm=-1;del(i);menu(8)}else{dmArm=i;menu(8);setTimeout(()=>{if(dmArm===i){dmArm=-1;if($('mn').style.display==='block')menu(8)}},3000)}}
 function menu(m){
   const b=$('mnb'),bt='style="width:100%;margin-top:10px"';
   $('mn').style.display='block';
   if(m===9){$('mn').style.display='none';return}
+  if(m===8){
+    b.innerHTML='<b>Items hatao</b>'+(items.length?items.map((it,i)=>'<div class="row" style="align-items:center;margin-top:8px"><span style="flex:3;word-break:break-word">'+esc(it.n||'(bina naam)')+'</span><button class="sec" style="flex:1;color:#c0392b;border-color:#c0392b" onclick="delM('+i+')">'+(dmArm===i?'Pakka?':'🗑')+'</button></div>').join(''):'<p style="color:var(--muted)">Koi item nahi hai.</p>')+'<button style="width:100%;margin-top:14px" onclick="menu()">Wapas</button>';return}
   if(m===7){$('mn').style.display='none';hm=3;$('hv').style.display='block';drawH();$('hv').scrollIntoView({behavior:'smooth'});return}
-  if(!m){b.innerHTML='<b>Settings</b>'+[['Khatabook (Udhaar)',7],['Dukaan ka naam',4],['Phone number',5],['Proprietor (malik)',6],['UPI ID',1],['User naam badlo',2],['Password badlo',3]].map(x=>'<button class="sec" '+bt+' onclick="menu('+x[1]+')">'+x[0]+'</button>').join('')+'<button '+bt+' onclick="menu(9)">Band karo</button>';return}
+  if(!m){b.innerHTML='<b>Settings</b>'+[['Khatabook (Udhaar)',7],['Items hatao',8],['Dukaan ka naam',4],['Phone number',5],['Proprietor (malik)',6],['UPI ID',1],['User naam badlo',2],['Password badlo',3]].map(x=>'<button class="sec" '+bt+' onclick="menu('+x[1]+')">'+x[0]+'</button>').join('')+'<button '+bt+' onclick="menu(9)">Band karo</button>';return}
   const foot='<p id="fm" style="color:#c0392b;font-size:13px;min-height:18px;margin:8px 0"></p><div class="row"><button class="sec" onclick="menu()">Wapas</button><button onclick="sv('+m+')">Save</button></div>';
   if(m===1)b.innerHTML='<b>UPI ID</b><label>UPI ID (bill par QR ke liye)</label><input id="f1" placeholder="naam@upi" value="'+esc($('up').value)+'">'+foot;
   if(m>=4&&m<=6){const L=['Dukaan ka naam','Phone number','Proprietor (malik ka naam)'][m-4],t=['sn','sp','pro'][m-4];b.innerHTML='<b>'+L+'</b><label>'+L+'</label><input id="f1" value="'+esc($(t).value)+'">'+foot}
